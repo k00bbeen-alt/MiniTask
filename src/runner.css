@@ -1,0 +1,27 @@
+.runner, .runner #game-root, .runner #hud { background: transparent; }
+html:has(body.runner) {background:transparent;}
+.runner { font-family:"Helvetica Neue",system-ui,sans-serif; }
+.runner #hud { position:absolute;inset:24px;pointer-events:none; }
+.runner p,.runner h1 {margin:0;}
+.runner [hidden] {display:none!important;}
+.runner-brand {display:flex;align-items:center;gap:12px;font-size:16px;line-height:20px;letter-spacing:1px;color:#fff;}
+.runner-brand i {width:10px;height:10px;border-radius:50%;background:#f5c842;}
+.runner-card {position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(460px,100%);padding:30px 38px;display:flex;flex-direction:column;align-items:center;gap:20px;outline:2px solid #09cee7;border-radius:25px;text-align:center;background:transparent;}
+.runner-card h1 {font-size:28px;line-height:34px;font-weight:700;color:#f5f4ee;}
+.runner-card p {font-size:16px;line-height:22px;}
+.runner-label {color:#f5c842;letter-spacing:2px;font-weight:700;}
+.runner-note {color:#aab7bc;}
+.runner button {font:700 17px/22px system-ui;color:#00cfe8;border:2px solid #00cfe8;border-radius:12px;padding:15px 18px;background:transparent;box-shadow:none;}
+.runner button:focus {outline:2px solid #f5c842;outline-offset:4px;}
+.runner #runner-confirm {width:100%;}
+.runner-score {position:absolute;top:65px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:16px;line-height:22px;}
+.runner-score strong {font-size:40px;line-height:48px;letter-spacing:1px;color:#f5c842;}
+.runner footer {position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:16px;line-height:22px;}
+.runner #runner-pause {border-width:1px;border-radius:19px;padding:9px 14px;font-size:16px;white-space:nowrap;}
+.runner #runner-results {width:100%;display:flex;justify-content:space-between;gap:20px;border-block:1px solid #394041;padding-block:18px;}
+.runner #runner-results div {display:flex;flex-direction:column;gap:6px;text-align:left;}
+.runner #runner-results div+div {text-align:right;}
+.runner #runner-results strong {font-size:35px;line-height:42px;color:#f5c842;}
+.runner #runner-results span {font-size:16px;line-height:22px;}
+.runner #game-canvas:focus {outline:none;}
+@media(max-width:480px){.runner-card{padding:24px 16px;gap:16px}.runner-brand{gap:8px;letter-spacing:0}.runner footer{align-items:end}.runner footer>span{max-width:200px}}

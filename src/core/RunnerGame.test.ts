@@ -1,0 +1,23 @@
+import { describe,it,expect } from 'vitest';
+import { RunnerGame } from './RunnerGame';
+import { RunnerInput } from './RunnerInput';
+import { MemoryKeyValueStore } from '@/framework/storage/KeyValueStore';
+const create=()=>new RunnerGame(new MemoryKeyValueStore());
+const advance=(g:RunnerGame,seconds:number,fps=60)=>{for(let i=0;i<Math.round(seconds*fps);i++)g.update(1/fps);};
+describe('Runner gameplay',()=>{
+ it('starts without applying start input to jump',()=>{const g=create();g.action('confirm');expect(g.state).toBe('playing');expect(g.velocity).toBe(0);});
+ it('ignores gameplay while idle',()=>{const g=create();g.action('jump');g.action('duckStart');advance(g,1);expect(g.score).toBe(0);expect(g.ducking).toBe(false);});
+ it('jumps, rejects airborne jump and lands',()=>{const g=create();g.start();g.action('jump');advance(g,.2);const v=g.velocity;g.action('jump');expect(g.velocity).toBe(v);advance(g,1);expect(g.height).toBe(0);});
+ it('duck expires and repeated duck cannot extend it',()=>{const g=create();g.start();g.action('duckStart');advance(g,.5);g.action('duckStart');advance(g,.5);expect(g.ducking).toBe(false);});
+ it('pause freezes all simulation and resume preserves it',()=>{const g=create();g.start();advance(g,2);g.pause();const before=JSON.stringify(g);advance(g,10);expect(JSON.stringify(g)).toBe(before);g.action('confirm');expect(g.score).toBe(20);expect(g.obstacles.length).toBe(1);expect(g.velocity).toBe(0);});
+ it('collision ends once and freezes score and motion',()=>{const g=create();g.start();g.obstacles=[{id:99,x:170,kind:'ground'}];advance(g,1);expect(g.state).toBe('over');expect(g.collisions).toBe(1);const x=g.obstacles[0].x;advance(g,2);expect(g.obstacles[0].x).toBe(x);expect(g.collisions).toBe(1);});
+ it('duck avoids air obstacle but not ground obstacle',()=>{const g=create();g.start();g.action('duckStart');g.obstacles=[{id:99,x:170,kind:'air'}];advance(g,.8);expect(g.state).toBe('playing');g.obstacles=[{id:100,x:170,kind:'ground'}];advance(g,.1);expect(g.state).toBe('over');});
+ it('jump avoids ground obstacle',()=>{const g=create();g.start();g.action('jump');advance(g,.2);g.obstacles=[{id:99,x:170,kind:'ground'}];advance(g,.4);expect(g.state).toBe('playing');});
+ it('standing collides with air',()=>{const g=create();g.start();g.obstacles=[{id:99,x:170,kind:'air'}];advance(g,.1);expect(g.state).toBe('over');});
+ it('restarts with no previous timers or obstacles',()=>{const g=create();g.start();advance(g,6);g.action('confirm');expect(g.state).toBe('playing');expect(g.score).toBe(0);expect(g.obstacles).toEqual([]);expect(g.height).toBe(0);});
+ it('persists best and ignores invalid storage',()=>{const s=new MemoryKeyValueStore();s.set('best','NaN');const g=new RunnerGame(s);expect(g.best).toBe(0);g.start();advance(g,2);expect(new RunnerGame(s).best).toBe(20);});
+ it('produces equal score and positions at 30,60,120fps',()=>{const games=[30,60,120].map(f=>{const g=create();g.start();advance(g,3,f);return g;});expect(games.map(g=>g.score)).toEqual([30,30,30]);expect(games[0].obstacles[0].x).toBeCloseTo(games[2].obstacles[0].x,8);});
+ it('caps speed and keeps obstacle headway above recovery time',()=>{const g=create();g.start();g.elapsed=1000;expect(g.speed).toBe(390);advance(g,3.2);expect(g.obstacles[1].x-g.obstacles[0].x).toBeGreaterThan(600);});
+ it('maps keyboard and Glass events, suppresses repeats',()=>{const actions:string[]=[];const input=new RunnerInput(a=>actions.push(a));for(const [key,repeat] of [['Enter',false],['Enter',true],['ArrowDown',false],[' ',false],['p',false],['ArrowRight',false]] as const)input.handleKeyDown({key,repeat,code:'',preventDefault(){}});expect(actions).toEqual(['confirm','duckStart','jump','pause','focusPause']);});
+ it('detaches listeners and attach is idempotent',()=>{const actions:string[]=[];const input=new RunnerInput(a=>actions.push(a));const target=new EventTarget();input.attach(target);input.attach(target);const e=new Event('keydown');Object.assign(e,{key:'Enter',repeat:false});target.dispatchEvent(e);input.detach();target.dispatchEvent(e);expect(actions).toEqual(['confirm']);});
+});
